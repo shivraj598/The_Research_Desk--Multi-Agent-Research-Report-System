@@ -1,5 +1,6 @@
+import asyncio
 import uuid
-import threading
+from concurrent.futures import ThreadPoolExecutor
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
@@ -26,8 +27,8 @@ app.add_middleware(
 )
 
 graph = compile_graph()
-
 jobs: dict[str, dict] = {}
+executor = ThreadPoolExecutor(max_workers=1)
 
 
 class ResearchRequest(BaseModel):
@@ -43,7 +44,7 @@ class ResearchResponse(BaseModel):
     status: str = "pending"
 
 
-def _run_research(topic: str, run_id: str):
+def execute_graph(topic: str, run_id: str):
     try:
         config = {"configurable": {"thread_id": run_id}}
         result = graph.invoke(initial_state(topic), config)
@@ -55,7 +56,7 @@ def _run_research(topic: str, run_id: str):
             "error": result.get("error"),
         }
     except Exception as e:
-        jobs[run_id] = {"status": "error", "error": str(e)}
+        jobs[run_id] = {"status": "error", "error": f"Research failed: {e}"}
 
 
 @app.get("/health")
@@ -70,9 +71,7 @@ async def start_research(req: ResearchRequest):
 
     run_id = str(uuid.uuid4())
     jobs[run_id] = {"status": "running"}
-    thread = threading.Thread(target=_run_research, args=(req.topic.strip(), run_id), daemon=True)
-    thread.start()
-
+    asyncio.get_event_loop().run_in_executor(executor, execute_graph, req.topic.strip(), run_id)
     return {"run_id": run_id, "status": "running"}
 
 
@@ -81,7 +80,6 @@ async def get_research(run_id: str):
     job = jobs.get(run_id)
     if not job:
         raise HTTPException(status_code=404, detail="Research run not found")
-
     return ResearchResponse(
         status=job.get("status", "unknown"),
         report=job.get("report", ""),

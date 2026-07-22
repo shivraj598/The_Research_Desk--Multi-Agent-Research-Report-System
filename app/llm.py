@@ -34,7 +34,7 @@ def get_llm_response(
     }
 
     try:
-        resp = httpx.post(url, headers=headers, json=payload, timeout=60)
+        resp = httpx.post(url, headers=headers, json=payload, timeout=120)
         resp.raise_for_status()
         data = resp.json()
         if not data.get("success"):
