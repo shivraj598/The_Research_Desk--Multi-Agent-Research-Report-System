@@ -1,21 +1,19 @@
-import asyncio
-
-from app.state import AppState
-from app.tools.tavily_search import search_subtopic, MAX_SEARCHES_PER_TASK
+from app.tools.tavily_search import search_subtopic
 from app.tools.scraper import scrape_urls
 
 
-def researcher_agent(state: AppState) -> AppState:
-    state.research_cycle_count += 1
+def researcher_agent(state: dict) -> dict:
+    state["research_cycle_count"] = state.get("research_cycle_count", 0) + 1
+    raw_sources = state.get("raw_sources", {})
 
-    for subtask in state.subtasks:
-        if subtask in state.raw_sources:
+    for subtask in state.get("subtasks", []):
+        if subtask in raw_sources:
             continue
 
         results = search_subtopic(subtask, max_results=5)
         urls = [r.get("url") for r in results if r.get("url")]
 
-        scraped = asyncio.run(scrape_urls(urls))
+        scraped = scrape_urls(urls)
 
         sources = []
         for r, s in zip(results, scraped):
@@ -25,6 +23,7 @@ def researcher_agent(state: AppState) -> AppState:
                 "content": s.get("content") or r.get("content", ""),
             })
 
-        state.raw_sources[subtask] = sources
+        raw_sources[subtask] = sources
 
+    state["raw_sources"] = raw_sources
     return state
