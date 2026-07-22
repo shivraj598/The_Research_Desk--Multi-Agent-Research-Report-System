@@ -16,14 +16,9 @@ Each agent communicates through a shared LangGraph state. Quick Search skips the
 
 ## Screenshots
 
-![Dark mode](sample_pic/image_darkmode.png)
-*Dark mode interface*
-
-![Light mode](sample_pic/image_white.png)
-*Light mode interface*
-
-![Research output](sample_pic/output1.png)
-*Research output example*
+![Dark mode](https://raw.githubusercontent.com/shivraj598/The_Research_Desk--Multi-Agent-Research-Report-System/main/sample_pic/image_darkmode.png)
+![Light mode](https://raw.githubusercontent.com/shivraj598/The_Research_Desk--Multi-Agent-Research-Report-System/main/sample_pic/image_white.png)
+![Output](https://raw.githubusercontent.com/shivraj598/The_Research_Desk--Multi-Agent-Research-Report-System/main/sample_pic/output1.png)
 
 ## Project Structure
 
