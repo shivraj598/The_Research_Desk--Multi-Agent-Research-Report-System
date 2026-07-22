@@ -1,5 +1,5 @@
 from app.llm import get_llm_response
-from app.state import AppState
+
 
 ORCHESTRATOR_SYSTEM_PROMPT = """You are a research Orchestrator. Your job is to break down a user's research topic into 4-6 specific, well-defined subtasks that can be researched independently.
 
@@ -16,12 +16,16 @@ CRITICAL RULES:
 - Output ONLY the numbered list, nothing else"""
 
 
-def orchestrator_agent(state: AppState) -> AppState:
-    user_prompt = f"Research topic: {state.topic}\n\nBreak this topic into 4-6 research subtasks."
-    response = get_llm_response(ORCHESTRATOR_SYSTEM_PROMPT, user_prompt)
+def orchestrator_agent(state: dict) -> dict:
+    topic = state.get("topic", "")
+    if not topic:
+        state["error"] = "No topic provided"
+        return state
+
+    response = get_llm_response(ORCHESTRATOR_SYSTEM_PROMPT, f"Research topic: {topic}\n\nBreak this topic into 4-6 research subtasks.")
 
     if not response or response.startswith("Error"):
-        state.error = f"Orchestrator failed: {response}"
+        state["error"] = f"Orchestrator failed: {response}"
         return state
 
     lines = [line.strip() for line in response.strip().splitlines() if line.strip()]
@@ -31,5 +35,5 @@ def orchestrator_agent(state: AppState) -> AppState:
         if cleaned and len(cleaned) > 10:
             subtasks.append(cleaned)
 
-    state.subtasks = subtasks[:6]
+    state["subtasks"] = subtasks[:6]
     return state
