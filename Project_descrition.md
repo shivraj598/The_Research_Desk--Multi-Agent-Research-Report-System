@@ -87,8 +87,7 @@ This gate is intentionally the last piece to build — the automated end-to-end 
 |**Mem0**|Shared memory layer so agents retain relevant context across the full workflow run, beyond just the immediate LangGraph state|
 |**FastAPI**|Exposes the entire system as a REST API — a deployable service with an endpoint that triggers a full research run|
 |**Python 3.12+**|Core implementation language for all agents, orchestration logic, and API layer|
-cloudfalre account ID : c60fb46a6cb95af54efcb9f440be252b
-API token = cfut_hLlwdO3QwfX4halnd0OneA8zPHM6iyrWK3Hco7hS26dc2e2c
+
 
 
 ---
