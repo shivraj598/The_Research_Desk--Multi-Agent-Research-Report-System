@@ -37,6 +37,10 @@ def get_llm_response(
         resp = httpx.post(url, headers=headers, json=payload, timeout=60)
         resp.raise_for_status()
         data = resp.json()
-        return data.get("result", {}).get("response")
+        if not data.get("success"):
+            return f"Cloudflare AI error: {data.get('errors', [{}])[0].get('message', 'unknown')}"
+        choices = data.get("result", {}).get("choices", [])
+        if choices:
+            return choices[0].get("message", {}).get("content", "")
     except Exception as e:
         return f"Error calling Cloudflare AI: {e}"
