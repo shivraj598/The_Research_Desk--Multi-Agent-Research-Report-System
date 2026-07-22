@@ -1,5 +1,5 @@
 from app.llm import get_llm_response
-from app.state import AppState
+
 
 FACT_CHECKER_SYSTEM_PROMPT = """You are a Fact-Checker. Your job is to verify every claim in the draft report against the original sourced content.
 
@@ -15,13 +15,14 @@ For each UNSUPPORTED or CONTRADICTED claim, provide:
 4. A suggested correction or annotation"""
 
 
-def fact_checker_agent(state: AppState) -> AppState:
-    if not state.draft_report:
-        state.error = "No draft report to fact-check"
+def fact_checker_agent(state: dict) -> dict:
+    draft_report = state.get("draft_report", "")
+    if not draft_report:
+        state["error"] = "No draft report to fact-check"
         return state
 
     raw_sources_text = ""
-    for subtask, sources in state.raw_sources.items():
+    for subtask, sources in state.get("raw_sources", {}).items():
         raw_sources_text += f"\n--- {subtask} ---\n"
         for s in sources:
             content = s.get("content", "")
@@ -30,14 +31,14 @@ def fact_checker_agent(state: AppState) -> AppState:
 
     user_prompt = (
         f"Original Sources:\n{raw_sources_text[:25000]}\n\n"
-        f"Draft Report to Fact-Check:\n{state.draft_report[:15000]}\n\n"
+        f"Draft Report to Fact-Check:\n{draft_report[:15000]}\n\n"
         "Check every claim in the report against the sources. List all UNSUPPORTED and CONTRADICTED claims with explanations and suggested corrections."
     )
     response = get_llm_response(FACT_CHECKER_SYSTEM_PROMPT, user_prompt, max_tokens=4096)
 
     if response and not response.startswith("Error"):
-        state.fact_check_results = [{"check": response}]
+        state["fact_check_results"] = [{"check": response}]
     else:
-        state.fact_check_results = [{"error": response or "Fact-checking failed"}]
+        state["fact_check_results"] = [{"error": response or "Fact-checking failed"}]
 
     return state
