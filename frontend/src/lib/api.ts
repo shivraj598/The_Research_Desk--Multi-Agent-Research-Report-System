@@ -4,6 +4,7 @@ export interface ResearchResponse {
   fact_checks: { check?: string; error?: string }[]
   error: string | null
   run_id: string
+  status: string
 }
 
 const API_BASE = "/api"
@@ -18,5 +19,15 @@ export async function startResearch(topic: string): Promise<ResearchResponse> {
     const err = await res.json().catch(() => ({}))
     throw new Error(err.detail || `Request failed (${res.status})`)
   }
-  return res.json()
+  const { run_id } = await res.json()
+
+  while (true) {
+    await new Promise((r) => setTimeout(r, 3000))
+    const poll = await fetch(`${API_BASE}/research/${run_id}`)
+    if (!poll.ok) continue
+    const data: ResearchResponse = await poll.json()
+    if (data.status === "done" || data.status === "error") {
+      return data
+    }
+  }
 }
