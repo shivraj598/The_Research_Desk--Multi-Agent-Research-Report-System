@@ -1,5 +1,5 @@
 from app.llm import get_llm_response
-from app.state import AppState
+
 
 ANALYST_SYSTEM_PROMPT = """You are a Research Analyst. Your job is to read raw source content and extract structured insights.
 
@@ -17,14 +17,17 @@ CRITICAL RULES:
 - Always attribute claims to their source URL"""
 
 
-def analyst_agent(state: AppState) -> AppState:
-    for subtask in state.subtasks:
-        if subtask in state.insights:
+def analyst_agent(state: dict) -> dict:
+    insights = state.get("insights", {})
+    raw_sources = state.get("raw_sources", {})
+
+    for subtask in state.get("subtasks", []):
+        if subtask in insights:
             continue
 
-        sources = state.raw_sources.get(subtask, [])
+        sources = raw_sources.get(subtask, [])
         if not sources:
-            state.insights[subtask] = [{"error": "No sources available"}]
+            insights[subtask] = [{"error": "No sources available"}]
             continue
 
         source_text = ""
@@ -33,16 +36,15 @@ def analyst_agent(state: AppState) -> AppState:
             if content:
                 source_text += f"\n--- Source: {s.get('url', 'unknown')} ---\n{content[:3000]}\n"
 
-        user_prompt = (
-            f"Subtasks: {subtask}\n\n"
-            f"Source Material:\n{source_text[:15000]}\n\n"
-            "Extract structured insights (key facts, figures, quotes, takeaways) with source attributions."
+        response = get_llm_response(
+            ANALYST_SYSTEM_PROMPT,
+            f"Subtasks: {subtask}\n\nSource Material:\n{source_text[:15000]}\n\nExtract structured insights (key facts, figures, quotes, takeaways) with source attributions.",
         )
-        response = get_llm_response(ANALYST_SYSTEM_PROMPT, user_prompt)
 
         if response and not response.startswith("Error"):
-            state.insights[subtask] = [{"analysis": response}]
+            insights[subtask] = [{"analysis": response}]
         else:
-            state.insights[subtask] = [{"error": response or "Analysis failed"}]
+            insights[subtask] = [{"error": response or "Analysis failed"}]
 
+    state["insights"] = insights
     return state
