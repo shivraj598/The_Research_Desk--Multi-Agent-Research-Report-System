@@ -1,9 +1,3 @@
-const API_BASE = "/api"
-
-export interface ResearchRequest {
-  topic: string
-}
-
 export interface ResearchResponse {
   report: string
   subtasks: string[]
@@ -12,6 +6,8 @@ export interface ResearchResponse {
   run_id: string
 }
 
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"
+
 export async function startResearch(topic: string): Promise<ResearchResponse> {
   const res = await fetch(`${API_BASE}/research`, {
     method: "POST",
@@ -19,8 +15,8 @@ export async function startResearch(topic: string): Promise<ResearchResponse> {
     body: JSON.stringify({ topic }),
   })
   if (!res.ok) {
-    const err = await res.json()
-    throw new Error(err.detail || "Research request failed")
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.detail || `Request failed (${res.status})`)
   }
   return res.json()
 }
