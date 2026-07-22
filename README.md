@@ -16,11 +16,14 @@ Each agent communicates through a shared LangGraph state. Quick Search skips the
 
 ## Screenshots
 
-<p align="center">
-  <img src="sample_pic/image_darkmode.png" width="280" alt="Dark mode interface" />
-  <img src="sample_pic/image_white.png" width="280" alt="Light mode interface" />
-  <img src="sample_pic/output1.png" width="280" alt="Research output example" />
-</p>
+![Dark mode](sample_pic/image_darkmode.png)
+*Dark mode interface*
+
+![Light mode](sample_pic/image_white.png)
+*Light mode interface*
+
+![Research output](sample_pic/output1.png)
+*Research output example*
 
 ## Project Structure
 
