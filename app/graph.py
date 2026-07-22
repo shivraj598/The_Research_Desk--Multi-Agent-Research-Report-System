@@ -8,28 +8,26 @@ from app.agents.analyst import analyst_agent
 from app.agents.writer import writer_agent
 from app.agents.fact_checker import fact_checker_agent
 
-MAX_RESEARCH_CYCLES = 2
+
+def error_handler(state: dict) -> dict:
+    state["final_report"] = f"An error occurred during research: {state.get('error', 'unknown error')}"
+    return state
 
 
-def should_continue(state: AppState) -> str:
-    if state.error:
+def finalize_report(state: dict) -> dict:
+    if not state.get("final_report"):
+        state["final_report"] = state.get("draft_report", "")
+    return state
+
+
+def should_continue(state: dict) -> str:
+    if state.get("error"):
         return "error"
-    if state.approval_status == "approved":
+    if state.get("approval_status") == "approved":
         return "finalize"
-    if state.approval_status == "revision_requested":
+    if state.get("approval_status") == "revision_requested":
         return "revise"
     return "continue"
-
-
-def error_handler(state: AppState) -> AppState:
-    state.final_report = f"An error occurred during research: {state.error}"
-    return state
-
-
-def finalize_report(state: AppState) -> AppState:
-    if not state.final_report:
-        state.final_report = state.draft_report
-    return state
 
 
 def build_graph() -> StateGraph:
