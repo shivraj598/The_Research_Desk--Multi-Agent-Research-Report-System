@@ -16,10 +16,36 @@ CRITICAL RULES:
 - Output ONLY the numbered list, nothing else"""
 
 
+SIMPLE_QUERY_KEYWORDS = [
+    "write a short", "write about", "introduction about",
+    "in one sentence", "briefly", "summarize",
+]
+
+CURRENT_EVENT_KEYWORDS = [
+    "current", "today", "latest", "recent", "breaking",
+    "now", "as of", "update", "this week", "this month",
+    "2025", "2026", "2027",
+]
+
+
+def _is_simple_query(topic: str) -> bool:
+    lower = topic.lower()
+    if any(kw in lower for kw in CURRENT_EVENT_KEYWORDS):
+        return False
+    if len(topic.split()) < 4:
+        return True
+    return any(kw in lower for kw in SIMPLE_QUERY_KEYWORDS)
+
+
 def orchestrator_agent(state: dict) -> dict:
     topic = state.get("topic", "")
     if not topic:
         state["error"] = "No topic provided"
+        return state
+
+    if _is_simple_query(topic):
+        state["simple_query"] = True
+        state["subtasks"] = [topic]
         return state
 
     response = get_llm_response(ORCHESTRATOR_SYSTEM_PROMPT, f"Research topic: {topic}\n\nBreak this topic into 4-6 research subtasks.")
