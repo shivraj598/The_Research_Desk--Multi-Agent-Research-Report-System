@@ -1,5 +1,4 @@
-from app.tools.tavily_search import search_subtopic
-from app.tools.scraper import scrape_urls
+from app.tools.web_search import search_web
 
 
 def researcher_agent(state: dict) -> dict:
@@ -10,17 +9,13 @@ def researcher_agent(state: dict) -> dict:
         if subtask in raw_sources:
             continue
 
-        results = search_subtopic(subtask, max_results=5)
-        urls = [r.get("url") for r in results if r.get("url")]
-
-        scraped = scrape_urls(urls)
-
+        results = search_web(subtask, max_results=5, scrape_content=True)
         sources = []
-        for r, s in zip(results, scraped):
+        for r in results:
             sources.append({
-                "url": r.get("url"),
-                "title": r.get("title"),
-                "content": s.get("content") or r.get("content", ""),
+                "url": r.get("url", ""),
+                "title": r.get("title", ""),
+                "content": r.get("content", ""),
             })
 
         raw_sources[subtask] = sources
