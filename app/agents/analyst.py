@@ -1,20 +1,26 @@
+from datetime import date
+
 from app.llm import get_llm_response
 
+TODAY = date.today().isoformat()
 
-ANALYST_SYSTEM_PROMPT = """You are a Research Analyst. Your job is to read raw source content and extract structured insights.
+ANALYST_SYSTEM_PROMPT = f"""Today is {TODAY}. You are a Research Analyst.
 
-For each subtask, analyze the provided source material and extract:
+Read the raw source content below and extract structured insights.
+
+For each source, extract:
 1. Key facts and data points (with source URLs)
 2. Important quotes (with attribution)
 3. Statistics and figures
 4. Key takeaways
 
-Output the insights as structured bullet points grouped by subtask. Always cite the source URL for each claim.
+Output as structured bullet points. Always cite the source URL for each claim.
 
 CRITICAL RULES:
-- Only extract information present in the provided sources
-- Do not add external knowledge
-- Always attribute claims to their source URL"""
+- Extract ONLY information present in the provided sources.
+- Do NOT use any of your own knowledge or training data.
+- Your training data may be months or years old — rely only on what you see here.
+- If a source is not relevant, skip it."""
 
 
 def analyst_agent(state: dict) -> dict:
