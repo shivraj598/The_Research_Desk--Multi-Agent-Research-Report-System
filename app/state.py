@@ -12,10 +12,11 @@ class AppState(TypedDict):
     approval_status: str
     revision_notes: str
     research_cycle_count: int
+    simple_query: bool
     error: Optional[str]
 
 
-def initial_state(topic: str) -> AppState:
+def initial_state(topic: str, mode: str = "quick") -> AppState:
     return {
         "topic": topic,
         "subtasks": [],
@@ -27,5 +28,6 @@ def initial_state(topic: str) -> AppState:
         "approval_status": "pending",
         "revision_notes": "",
         "research_cycle_count": 0,
+        "simple_query": mode == "quick",
         "error": None,
     }
