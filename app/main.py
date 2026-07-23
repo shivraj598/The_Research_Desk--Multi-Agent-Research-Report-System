@@ -33,6 +33,7 @@ executor = ThreadPoolExecutor(max_workers=1)
 
 class ResearchRequest(BaseModel):
     topic: str
+    mode: str = "quick"
 
 
 class ResearchResponse(BaseModel):
@@ -44,10 +45,13 @@ class ResearchResponse(BaseModel):
     status: str = "pending"
 
 
-def execute_graph(topic: str, run_id: str):
+def execute_graph(topic: str, run_id: str, mode: str = "quick"):
     try:
+        state = initial_state(topic, mode=mode)
         config = {"configurable": {"thread_id": run_id}}
-        result = graph.invoke(initial_state(topic), config)
+        result = graph.invoke(state, config)
+        if jobs.get(run_id, {}).get("status") == "cancelled":
+            return
         jobs[run_id] = {
             "status": "done",
             "report": result.get("final_report", "") or result.get("draft_report", ""),
@@ -56,7 +60,8 @@ def execute_graph(topic: str, run_id: str):
             "error": result.get("error"),
         }
     except Exception as e:
-        jobs[run_id] = {"status": "error", "error": f"Research failed: {e}"}
+        if jobs.get(run_id, {}).get("status") != "cancelled":
+            jobs[run_id] = {"status": "error", "error": f"Research failed: {e}"}
 
 
 @app.get("/health")
@@ -71,7 +76,9 @@ async def start_research(req: ResearchRequest):
 
     run_id = str(uuid.uuid4())
     jobs[run_id] = {"status": "running"}
-    asyncio.get_event_loop().run_in_executor(executor, execute_graph, req.topic.strip(), run_id)
+    asyncio.get_event_loop().run_in_executor(
+        executor, execute_graph, req.topic.strip(), run_id, req.mode
+    )
     return {"run_id": run_id, "status": "running"}
 
 
@@ -88,3 +95,11 @@ async def get_research(run_id: str):
         error=job.get("error"),
         run_id=run_id,
     )
+
+
+@app.post("/research/{run_id}/stop")
+async def stop_research(run_id: str):
+    if run_id not in jobs:
+        raise HTTPException(status_code=404, detail="Research run not found")
+    jobs[run_id] = {"status": "cancelled", "report": "", "error": "Cancelled by user"}
+    return {"status": "cancelled"}
