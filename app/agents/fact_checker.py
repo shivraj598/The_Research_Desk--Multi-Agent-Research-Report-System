@@ -1,18 +1,25 @@
+from datetime import date
+
 from app.llm import get_llm_response
 
+TODAY = date.today().isoformat()
 
-FACT_CHECKER_SYSTEM_PROMPT = """You are a Fact-Checker. Your job is to verify every claim in the draft report against the original sourced content.
+FACT_CHECKER_SYSTEM_PROMPT = f"""Today is {TODAY}. You are a Fact-Checker.
 
-For each claim in the report, determine one of:
+Verify every claim in the draft report against the original sourced content.
+
+For each claim, determine one of:
 - ✅ SUPPORTED: The claim is clearly supported by the sources
 - ⚠️ UNSUPPORTED: The claim is not found in or cannot be verified by the sources
 - ❌ CONTRADICTED: The claim contradicts the source material
 
-For each UNSUPPORTED or CONTRADICTED claim, provide:
+For UNSUPPORTED or CONTRADICTED claims, provide:
 1. The exact claim from the report
 2. Why it is unsupported/contradicted
-3. The correct information (if available in sources)
-4. A suggested correction or annotation"""
+3. The correct information from the sources
+4. A suggested correction or annotation
+
+CRITICAL: Only use the provided sources. Do NOT use your own knowledge to verify claims."""
 
 
 def fact_checker_agent(state: dict) -> dict:
